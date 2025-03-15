@@ -1,117 +1,94 @@
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('🚀 Sprawdzam, czy `DOMContentLoaded` działa poprawnie');
   setupNavigation();
+  setupHamburgerMenu();
+  handleInitialSection();
 
-  // Jeśli nie ma hasha w URL, nie ukrywaj niczego (czyli "Home" = cała strona)
-  if (!window.location.hash) {
-    showSection('home');
-  }
+  console.log('✅ Wymuszam `fetchProducts()` BEZ sprawdzania `hash`');
+
+  // 🔹 Pobieramy produkty niezależnie od `hash`
+  setTimeout(() => {
+    console.log('🛠 Wywołuję `fetchProducts()` bez sprawdzania `hash`');
+    fetchProducts();
+  }, 1000);
 });
 
+
+/** 🔹 Pobiera i wyświetla produkty */
 function fetchProducts() {
   fetch('http://localhost:3131/products')
     .then(response => response.json())
     .then(products => {
+      console.log('📥 Produkty pobrane z API:', products);
       renderProducts(products);
     })
-    .catch(error => console.error('Error fetching data:', error));
+    .catch(error => console.error('❌ Błąd podczas pobierania danych:', error));
 }
 
+/** 🔹 Renderuje produkty na stronie */
 function renderProducts(products) {
+  console.log('🔄 Renderowanie produktów:', products);
+
   const productsContainer = document.querySelector('.products');
+  if (!productsContainer) {
+    console.error('❌ Nie znaleziono kontenera .products');
+    return;
+  }
 
-  // Usuwamy poprzednie produkty
-  productsContainer.innerHTML = '';
+  productsContainer.innerHTML = ''; // Czyszczenie poprzedniej zawartości
 
-  // Tworzymy nową listę produktów
   const productsList = document.createElement('div');
   productsList.classList.add('products__list');
 
-  // Dodajemy tylko 3 unikalne produkty
   products.slice(0, 3).forEach((product, index) => {
-    //const productData = Object.assign({}, product);
-    let productHTML;
+    console.log(`✅ Renderowanie produktu: ${product.title} | Index: ${index}`);
 
-    if (index % 2 !== 0) {
-      // Produkt parzysty - obraz po lewej, opis po prawej
-      productHTML = `
-        <div class="row align-items-center mb-5 flex-md-row-reverse">
-          <div class="col-md-6 text-center">
-            <img class="img-fluid product-card__image" src="${product.image}" alt="${product.title}">
-          </div>
-          <div class="col-md-6">
-            <h3 class="product-card__title">${product.id}. ${product.title}</h3>
-            <div class="product-card__description">
-              <hr class="product-card__divider">
-              <p>${product.description}</p>
-            </div>
-            <div class="product-card__meta">
-              <div class="product-card__meta-item">
-                <span class="product-card__meta-label">Roasting:</span>
-                <span class="product-card__meta-value">${product.roasting}/10</span>
-              </div>
-              <div class="product-card__meta-item">
-                <span class="product-card__meta-label">Intensity:</span>
-                <span class="product-card__meta-value">${product.intensity}/10</span>
-              </div>
-            </div>
-          </div>
-        </div>`;
-    } else {
-      // Produkt nieparzysty - opis po lewej, obraz po prawej
-      productHTML = `
-        <div class="row align-items-center mb-5">
-          <div class="col-md-6">
-            <h3 class="product-card__title">${product.id}. ${product.title}</h3>
-            <div class="product-card__description">
-              <hr class="product-card__divider">
-              <p>${product.description}</p>
-            </div>
-            <div class="product-card__meta">
-              <div class="product-card__meta-item">
-                <span class="product-card__meta-label">Roasting:</span>
-                <span class="product-card__meta-value">${product.roasting}/10</span>
-              </div>
-              <div class="product-card__meta-item">
-                <span class="product-card__meta-label">Intensity:</span>
-                <span class="product-card__meta-value">${product.intensity}/10</span>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-6 text-center">
-            <img class="img-fluid product-card__image" src="${product.image}" alt="${product.title}">
-          </div>
-        </div>`;
-    }
+    let isReversed = index % 2 === 1;
+    console.log(`🔄 Produkt ${product.title} ${isReversed ? '⏪ ODWRÓCONY' : '➡ NORMALNY'}`);
 
-    productsList.insertAdjacentHTML('beforeend', productHTML);
+    let row = document.createElement('div');
+    row.classList.add('row', 'align-items-center', 'mb-5');
+
+    let imgCol = document.createElement('div');
+    imgCol.classList.add('col-md-6', 'text-center');
+    if (isReversed) imgCol.classList.add('order-md-2');
+    imgCol.innerHTML = `<img class="img-fluid product-card__image" src="${product.image}" alt="${product.title}">`;
+
+    let textCol = document.createElement('div');
+    textCol.classList.add('col-md-6');
+    if (isReversed) textCol.classList.add('order-md-1');
+    textCol.innerHTML = `
+      <h3 class="product-card__title">${product.id}. ${product.title}</h3>
+      <div class="product-card__description">
+        <hr class="product-card__divider">
+        <p>${product.description}</p>
+      </div>
+    `;
+
+    row.appendChild(imgCol);
+    row.appendChild(textCol);
+    productsList.appendChild(row);
   });
 
-  // Dodajemy produkty do sekcji "Products"
   productsContainer.appendChild(productsList);
 }
 
 
 
-
+/** 🔹 Pokazuje odpowiednią sekcję */
 function showSection(hash) {
-  console.log(`Przełączam na sekcję: ${hash}`); // DEBUG
-  let sections = document.querySelectorAll('main section');
+  console.log(`🔄 Przełączam na sekcję: ${hash}`);
+  const sections = document.querySelectorAll('main section');
 
-  // Jeśli Home, to nie ukrywaj sekcji, tylko ukryj Contact
   if (hash === 'home') {
     sections.forEach(section => {
-      if (section.id === 'contact') {
-        section.style.display = 'none';
-      } else {
-        section.style.display = 'block';
-      }
+      section.style.display = section.id === 'contact' ? 'none' : 'block';
     });
     return;
   }
 
-  // Ukryj wszystkie sekcje, oprócz wybranej
   sections.forEach(section => {
-    section.style.display = (section.id === hash) ? 'block' : 'none';
+    section.style.display = section.id === hash ? 'block' : 'none';
   });
 
   if (hash === 'products') {
@@ -119,8 +96,9 @@ function showSection(hash) {
   }
 }
 
+/** 🔹 Obsługuje nawigację i zmiany zakładek */
 function setupNavigation() {
-  console.log('setupNavigation uruchomione!'); // DEBUG
+  console.log('🔄 setupNavigation uruchomione!');
   const links = document.querySelectorAll('.navigation__menu a');
 
   links.forEach(link => {
@@ -133,14 +111,16 @@ function setupNavigation() {
   });
 
   const currentHash = window.location.hash.substring(1) || 'home';
+  console.log(`📌 Aktualny hash: ${currentHash}`);
   showSection(currentHash);
+
+  if (currentHash === 'products') {
+    console.log('🛠 Wywołuję fetchProducts() na starcie');
+    fetchProducts();
+  }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  setupNavigation();
-  setupHamburgerMenu();
-});
-
+/** 🔹 Obsługa menu hamburgerowego */
 function setupHamburgerMenu() {
   const menuButton = document.querySelector('.hamburger-menu');
   const menu = document.querySelector('.navigation__menu');
@@ -148,19 +128,35 @@ function setupHamburgerMenu() {
 
   if (menuButton && menu) {
     menuButton.addEventListener('click', () => {
-      menu.classList.toggle('active'); // Otwiera / zamyka menu
+      menu.classList.toggle('active');
     });
 
-    // Zamykamy menu po kliknięciu w dowolny link
     menuLinks.forEach(link => {
       link.addEventListener('click', event => {
-        event.preventDefault(); // Blokuje domyślną akcję
+        event.preventDefault();
         const sectionId = link.getAttribute('href').substring(1);
-        showSection(sectionId); // Wywołujemy funkcję zmiany sekcji
-        history.pushState(null, null, `#${sectionId}`); // Aktualizujemy URL
-        menu.classList.remove('active'); // Zamykamy menu
+        showSection(sectionId);
+        history.pushState(null, null, `#${sectionId}`);
+        menu.classList.remove('active');
       });
     });
   }
 }
+
+/** 🔹 Obsługuje wyświetlenie sekcji "Products" na starcie */
+function handleInitialSection() {
+  console.log('🚀 Sprawdzam, czy trzeba pokazać sekcję #products');
+
+  if (window.location.hash === '#products') {
+    console.log('✅ Automatycznie pokazuję #products');
+
+    const productsSection = document.querySelector('#products');
+    if (productsSection) {
+      productsSection.classList.add('active'); // ⬅️ Dodajemy klasę "active"
+      productsSection.style.display = 'block'; // ⬅️ Upewniamy się, że sekcja jest widoczna
+      fetchProducts(); // ⬅️ Pobieramy produkty automatycznie!
+    }
+  }
+}
+
 

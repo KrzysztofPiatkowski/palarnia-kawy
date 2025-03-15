@@ -367,6 +367,11 @@ i.icon-arrow {
   width: 70%;
 }
 
+.row.align-items-center:nth-child(even) {
+  flex-direction: row-reverse;
+}
+
+
 /* Contact Us */
 
 .contact {
